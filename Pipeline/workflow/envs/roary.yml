@@ -1,0 +1,6 @@
+name: roary_environment
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - roary=3.12.0
