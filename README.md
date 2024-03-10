@@ -53,10 +53,11 @@ This Flowchart summerizes all computational steps of BacPop. Only green highligh
 
 - **Data Path**: The path to the directory containing input data.
 - **Global Parameters**: 
+  - `CG`: Here, configuration regarding the method used in generating the Core Genome needs to be specified. Options are (`roary` or `chewbacca`). this needs to be set, default is `roary`. 
   - `check_results`: If set to `True`, the workflow checks for existing result folders.
   - `threads`: The number of threads to use for multi-threaded steps.
   - `memory`: The memory allocation for resource-intensive steps.
-  - Various analysis steps (`qc`, `annotation`, `amr`, `mlst`, `kraken`) can be enabled or disabled based on your requirements.
+  - Various analysis steps (`qc`, `annotation`, `amr`, `virulence`, `mlst`, `kraken`) can be enabled or disabled based on your requirements.
   
 - **Tool Parameters**: 
   - Configuration parameters for individual tools such as annotation, cgMLST, AMR, and the phylogenetic tree model.

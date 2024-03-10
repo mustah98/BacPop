@@ -100,7 +100,7 @@ def rule_all():
 			rule_all.append(path_abs + "results/" + date_folder + "/roary/")
 			rule_all.append(path_abs + "results/" + date_folder + "/treefiles/core_gene_alignment.aln")
 
-		if config["global"]["CG"] == "cgMLST":
+		if config["global"]["CG"] == "chewbbaca":
 			rule_all.append(path_abs + "results/" + date_folder + "/cgMLST/")
 			rule_all.append(path_abs + "results/" + date_folder + "/cgMSA/")
 
@@ -128,12 +128,13 @@ def rule_all():
 		if config["global"]["CG"] == "roary":
 			rule_all.append(path_abs + "results/" + date_folder + "/roary/")
 			rule_all.append(path_abs + "results/" + date_folder + "/treefiles/core_gene_alignment.aln")
-
-		if config["global"]["CG"] == "cgMLST":
+			rule_all.append(path_abs + "results/" + date_folder + "/phylogenetic_tree_roary/")
+		if config["global"]["CG"] == "chewbbaca":
 			rule_all.append(path_abs + "results/" + date_folder + "/cgMLST/")
 			rule_all.append(path_abs + "results/" + date_folder + "/cgMSA/")
+			rule_all.append(path_abs + "results/" + date_folder + "/phylogenetic_tree_chewbbaca/")
 
-		rule_all.append(path_abs + "results/" + date_folder + "/phylogenetic_tree/")
+		
 
 
 	print(rule_all)
@@ -321,7 +322,7 @@ rule tree_roary:
 	input: 
 		ALIGNMENT = path_abs + "results/" + date_folder + "/treefiles/core_gene_alignment.aln",
 	output:	
-		TREE = directory(path_abs + "results/" + date_folder + "/phylogenetic_tree/"),
+		TREE = directory(path_abs + "results/" + date_folder + "/phylogenetic_tree_roary/"),
 	params: 
 		MODEL = config["tree"]["model"],
 	conda: "Pipeline/workflow/envs/roary.yml",
@@ -374,7 +375,7 @@ rule tree_cgmsa:
 	input:
 		MSA = path_abs + "results/" + date_folder + "/cgMSA/"
 	output:
-		TREE = directory(path_abs + "results/" + date_folder + "/phylogenetic_tree/")
+		TREE = directory(path_abs + "results/" + date_folder + "/phylogenetic_tree_chewbbaca/")
 	params:
 		MODEL = config["tree"]["model"],
 	conda: "Pipeline/workflow/envs/cgmlst.yml",
