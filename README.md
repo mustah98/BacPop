@@ -25,7 +25,7 @@ This Workflow is a comprehensive and automated pipeline designed to streamline t
    - Assembles trimmed sequences using SPAdes to produce contigs.
 
 6. **Annotation**
-   - If the `annotation` option is enabled, Annotation using BAKTA is performed. The path to the Bakta Database needs to be specified in the Configuration file.
+   - Genome Annotation using BAKTA is performed. The path to the Bakta Database needs to be specified in the Configuration file.
 
 7. **MLST (Multi-Locus Sequence Typing)**
    - Performs MLST analysis on assemblies if the option `mlst` is enabled.

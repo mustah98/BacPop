@@ -75,9 +75,7 @@ def rule_all():
 			rule_all.append(expand(path_abs + "results/" + date_folder + "/QC/{sample}_trimm_1_fastqc.html", sample = sample_names))
 			rule_all.append(expand(path_abs + "results/" + date_folder + "/QC/{sample}_trimm_2_fastqc.html", sample = sample_names))
 
-		if config["global"]["annotation"] and os.path.isdir(config["annotation"]["db"]):
-			rule_all.append(expand(path_abs + "results/" + date_folder + "/annotations/{sample}/{sample}.gff3", sample = sample_names))
-			rule_all.append(expand(path_abs + "results/" + date_folder + "/all_gffs/{sample}.gff3", sample = sample_names))
+
 
 		if config["global"]["amr"]:
 			rule_all.append(expand(path_abs + "results/" + date_folder + "/AMR/{sample}.tsv", sample = sample_names))
@@ -88,6 +86,8 @@ def rule_all():
 		if config["global"]["mlst"]:
 			rule_all.append(path_abs + "results/" + date_folder + "/mlst/mlst.csv")
 
+		rule_all.append(expand(path_abs + "results/" + date_folder + "/annotations/{sample}/{sample}.gff3", sample = sample_names))
+		rule_all.append(expand(path_abs + "results/" + date_folder + "/all_gffs/{sample}.gff3", sample = sample_names))
 		rule_all.append(expand(path_abs + "results/" + date_folder + "/trimmed_sequences/{sample}_trimm_1.fastq.gz", sample = sample_names))
 		rule_all.append(expand(path_abs + "results/" + date_folder + "/trimmed_sequences/{sample}_trimm_2.fastq.gz", sample = sample_names))
 		rule_all.append(expand(path_abs + "results/" + date_folder + "/assemblies/{sample}", sample = sample_names))
@@ -108,10 +108,6 @@ def rule_all():
 
 	elif config["global"]["files"] == "fasta":
 
-		if config["global"]["annotation"] and os.path.isdir(config["annotation"]["db"]):
-			rule_all.append(expand(path_abs + "results/" + date_folder + "/annotations/{sample}/{sample}.gff3", sample = sample_names))
-			rule_all.append(expand(path_abs + "results/" + date_folder + "/all_gffs/{sample}.gff3", sample = sample_names))
-
 		if config["global"]["amr"]:
 			rule_all.append(expand(path_abs + "results/" + date_folder + "/AMR/{sample}.tsv", sample = sample_names))
 
@@ -125,6 +121,9 @@ def rule_all():
 		if config["global"]["qc"]:
 			rule_all.append(expand(path_abs + "results/" + date_folder + "/quast/{sample}", sample = sample_names))
 
+		rule_all.append(expand(path_abs + "results/" + date_folder + "/annotations/{sample}/{sample}.gff3", sample = sample_names))
+		rule_all.append(expand(path_abs + "results/" + date_folder + "/all_gffs/{sample}.gff3", sample = sample_names))
+		
 		if config["global"]["CG"] == "roary":
 			rule_all.append(path_abs + "results/" + date_folder + "/roary/")
 			rule_all.append(path_abs + "results/" + date_folder + "/treefiles/core_gene_alignment.aln")

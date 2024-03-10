@@ -16,7 +16,6 @@ global:
  CG: "roary"
  ### if all steps are defined as False, only a Core Genome Phylogeny is constructed ###
  qc: True
- annotation: False
  amr: False
  virulence: False
  mlst: False
