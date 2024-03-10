@@ -13,6 +13,7 @@ global:
  files: "fasta"
  threads: "32"
  memory: "200"
+ CG: "roary"
  ### if all steps are defined as False, only a Core Genome Phylogeny is constructed ###
  qc: True
  annotation: False
@@ -36,6 +37,9 @@ amr:
  minid: "80"
  mincov: "80"
  database: "megares"
+
+ roary:
+  minid: "95"
 
 tree:
   model: "GTR+G"

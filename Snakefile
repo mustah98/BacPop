@@ -104,8 +104,15 @@ def rule_all():
 			rule_all.append(path_abs + "results/" + date_folder + "/mlst/mlst.csv")
 
 		rule_all.append(expand(path_abs + "results/" + date_folder + "/assemblies_contigs/{sample}.fasta", sample = sample_names))
-		rule_all.append(path_abs + "results/" + date_folder + "/cgMLST/")
-		rule_all.append(path_abs + "results/" + date_folder + "/cgMSA/")
+		if config["global"]["qc"]:
+			rule_all.append(expand(path_abs + "results/" + date_folder + "/quast/{sample}", sample = sample_names))
+		if config["global"]["CG"] == "roary":
+			rule_all.append(path_abs + "results/" + date_folder + "/roary/")
+			rule_all.append(path_abs + "results/" + date_folder + "/treefiles/core_gene_alignment.aln")
+		if config["global"]["CG"] == "cgMLST":
+			rule_all.append(path_abs + "results/" + date_folder + "/cgMLST/")
+			rule_all.append(path_abs + "results/" + date_folder + "/cgMSA/")
+
 		rule_all.append(path_abs + "results/" + date_folder + "/phylogenetic_tree/")
 
 
@@ -167,6 +174,15 @@ rule assembly:
 	shell:
 		"spades.py -t {threads} -m {params.MEMORY} --isolate -1 {input.R1} -2 {input.R2} -o {output.OUT}"
 
+
+#----------------------------------------------------------------------------------------------------------------------------
+
+rule quast:	
+	input: path_abs + "results/" + date_folder + "/assemblies/{sample}/contigs.fasta",
+	output: path_abs + "results/" + date_folder + "/quast/{sample}",
+	conda: "Pipeline/workflow/envs/quast.yml",
+	shell: "quast {input} -o {output}"
+
 #----------------------------------------------------------------------------------------------------------------------------
 
 rule move_assemblies:
@@ -223,20 +239,6 @@ rule mlst:
 
 #----------------------------------------------------------------------------------------------------------------------------
 
-rule roary:
-	input:
-		ANNOTATIONS = expand(path_abs + "results/" + date_folder + "/all_gffs/{sample}.gff3", sample = sample_names)
-	output:
-		OUT = directory(path_abs + "results/" + date_folder + "/roary/"),
-	conda: "Pipeline/workflow/envs/roary.yml",
-	params:
-		ANNOTATIONS_DIR = path_abs + "results/" + date_folder + "/all_gffs/",
-	shell:
-		"roary -i 90 -f {output.OUT} -p 32 {params.ANNOTATIONS_DIR}"
-
-#----------------------------------------------------------------------------------------------------------------------------
-
-
 rule amr:
 	input:
 		ASSEMBLY = path_abs + "results/" + date_folder + "/assemblies_contigs/{sample}.fasta",
@@ -250,6 +252,46 @@ rule amr:
 	threads: int(config["global"]["threads"]),
 	shell:
 		"abricate {input.ASSEMBLY} --threads {threads}  --minid {params.MINID} --mincov {params.MINCOV} > {output.OUT}"
+
+#----------------------------------------------------------------------------------------------------------------------------
+
+rule roary:
+	input:
+		ANNOTATIONS = expand(path_abs + "results/" + date_folder + "/all_gffs/{sample}.gff3", sample = sample_names)
+	output:
+		OUT = directory(path_abs + "results/" + date_folder + "/roary/"),
+	conda: "Pipeline/workflow/envs/roary.yml",
+	params:
+		ANNOTATIONS_DIR = path_abs + "results/" + date_folder + "/all_gffs/",
+		MINID = config["roary"]["minid"],
+		THREADS = int(config["global"]["threads"]),
+	shell:
+		"roary -i {params.MINID} -f {output.OUT} -p {params.THREADS} {params.ANNOTATIONS_DIR}"
+
+#----------------------------------------------------------------------------------------------------------------------------
+
+rule mv_cgaln:
+	input:	path_abs + "results/" + date_folder + "/roary/",
+	output: path_abs + "results/" + date_folder + "/treefiles/core_gene_alignment.aln",
+	shell: "cp {input} {output}"
+
+
+#----------------------------------------------------------------------------------------------------------------------------
+
+rule tree_roary:
+	input: 
+		ALIGNMENT = path_abs + "results/" + date_folder + "/treefiles/core_gene_alignment.aln",
+	output:	
+		TREE = directory(path_abs + "results/" + date_folder + "/phylogenetic_tree/"),
+	params: 
+		MODEL = config["tree"]["model"],
+	conda: "Pipeline/workflow/envs/roary.yml",
+	threads: int(config["global"]["threads"]),
+	shell:
+		"""
+			mkdir -p {output.TREE}
+			raxml-ng --all --force perf_threads --prefix {output.TREE} --msa {input.ALIGNMENT} --model {params.MODEL} --threads  {threads}
+		"""	
 
 #----------------------------------------------------------------------------------------------------------------------------
 
@@ -289,7 +331,7 @@ rule cg_alignment:
 
 #----------------------------------------------------------------------------------------------------------------------------
 
-rule tree:
+rule tree_cgmsa:
 	input:
 		MSA = path_abs + "results/" + date_folder + "/cgMSA/"
 	output:
