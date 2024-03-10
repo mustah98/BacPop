@@ -47,7 +47,7 @@ This Workflow is a comprehensive and automated pipeline designed to streamline t
 
 This Flowchart summerizes all computational steps of BacPop. Only green highlighted steps are currently part of BacPop.
 
-![Alt Text](.png)
+![Alt Text](flowchart_drawai.png)
 
 ## Configuration Parameters
 
