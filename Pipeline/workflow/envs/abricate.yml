@@ -1,4 +1,4 @@
-name: amr
+name: abricate
 channels:
   - bioconda
   - conda-forge

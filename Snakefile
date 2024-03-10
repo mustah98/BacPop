@@ -70,6 +70,7 @@ def rule_all():
 	rule_all = []
 
 	if config["global"]["files"] == "fastq":
+		
 		if config["global"]["qc"]:
 			rule_all.append(expand(path_abs + "results/" + date_folder + "/QC/{sample}_trimm_1_fastqc.html", sample = sample_names))
 			rule_all.append(expand(path_abs + "results/" + date_folder + "/QC/{sample}_trimm_2_fastqc.html", sample = sample_names))
@@ -81,6 +82,9 @@ def rule_all():
 		if config["global"]["amr"]:
 			rule_all.append(expand(path_abs + "results/" + date_folder + "/AMR/{sample}.tsv", sample = sample_names))
 
+		if config["global"]["virulence"]:
+			rule_all.append(expand(path_abs + "results/" + date_folder + "/virulence/{sample}.tsv", sample = sample_names))
+
 		if config["global"]["mlst"]:
 			rule_all.append(path_abs + "results/" + date_folder + "/mlst/mlst.csv")
 
@@ -88,11 +92,22 @@ def rule_all():
 		rule_all.append(expand(path_abs + "results/" + date_folder + "/trimmed_sequences/{sample}_trimm_2.fastq.gz", sample = sample_names))
 		rule_all.append(expand(path_abs + "results/" + date_folder + "/assemblies/{sample}", sample = sample_names))
 		rule_all.append(expand(path_abs + "results/" + date_folder + "/assemblies_contigs/{sample}.fasta", sample = sample_names))
-		rule_all.append(path_abs + "results/" + date_folder + "/cgMLST/")
-		rule_all.append(path_abs + "results/" + date_folder + "/cgMSA/")
+
+		if config["global"]["qc"]:
+			rule_all.append(expand(path_abs + "results/" + date_folder + "/quast/{sample}", sample = sample_names))
+
+		if config["global"]["CG"] == "roary":
+			rule_all.append(path_abs + "results/" + date_folder + "/roary/")
+			rule_all.append(path_abs + "results/" + date_folder + "/treefiles/core_gene_alignment.aln")
+
+		if config["global"]["CG"] == "cgMLST":
+			rule_all.append(path_abs + "results/" + date_folder + "/cgMLST/")
+			rule_all.append(path_abs + "results/" + date_folder + "/cgMSA/")
+
 		rule_all.append(path_abs + "results/" + date_folder + "/phylogenetic_tree/")
 
 	elif config["global"]["files"] == "fasta":
+
 		if config["global"]["annotation"] and os.path.isdir(config["annotation"]["db"]):
 			rule_all.append(expand(path_abs + "results/" + date_folder + "/annotations/{sample}/{sample}.gff3", sample = sample_names))
 			rule_all.append(expand(path_abs + "results/" + date_folder + "/all_gffs/{sample}.gff3", sample = sample_names))
@@ -100,15 +115,20 @@ def rule_all():
 		if config["global"]["amr"]:
 			rule_all.append(expand(path_abs + "results/" + date_folder + "/AMR/{sample}.tsv", sample = sample_names))
 
+		if config["global"]["virulence"]:
+			rule_all.append(expand(path_abs + "results/" + date_folder + "/virulence/{sample}.tsv", sample = sample_names))
+
 		if config["global"]["mlst"]:
 			rule_all.append(path_abs + "results/" + date_folder + "/mlst/mlst.csv")
 
 		rule_all.append(expand(path_abs + "results/" + date_folder + "/assemblies_contigs/{sample}.fasta", sample = sample_names))
 		if config["global"]["qc"]:
 			rule_all.append(expand(path_abs + "results/" + date_folder + "/quast/{sample}", sample = sample_names))
+
 		if config["global"]["CG"] == "roary":
 			rule_all.append(path_abs + "results/" + date_folder + "/roary/")
 			rule_all.append(path_abs + "results/" + date_folder + "/treefiles/core_gene_alignment.aln")
+
 		if config["global"]["CG"] == "cgMLST":
 			rule_all.append(path_abs + "results/" + date_folder + "/cgMLST/")
 			rule_all.append(path_abs + "results/" + date_folder + "/cgMSA/")
@@ -152,11 +172,14 @@ rule trimm:
 		R1 = path_abs + "results/" + date_folder + "/trimmed_sequences/{sample}_trimm_1.fastq.gz",
 		R2 = path_abs + "results/" + date_folder + "/trimmed_sequences/{sample}_trimm_2.fastq.gz",
 		HTML = path_abs + "results/" + date_folder + "/trimmed_sequences/{sample}.html",
-		JSON = path_abs + "results/" + date_folder + "/trimmed_sequences/{sample}.json",
+		JSON = path_abs + "results/" + date_folder + "/trimmed_sequences/{sample}.json",	
+	params:
+		MINQ = config["fastp"]["length_required"],
+		MINLEN = config["fastp"]["qualified_quality_phred"],
 	conda: "Pipeline/workflow/envs/trimm.yml"
 	threads: int(config["global"]["threads"]),
 	shell:
-		"fastp -w {threads} -i {input.R1} -I {input.R2} -o {output.R1} -O {output.R2}  -h results/" + date_folder +  "/trimmed_sequences/{wildcards.sample}.html -j  results/" + date_folder +  "/trimmed_sequences/{wildcards.sample}.json --qualified_quality_phred 20 --length_required 50"
+		"fastp -w {threads} -i {input.R1} -I {input.R2} -o {output.R1} -O {output.R2}  -h results/" + date_folder +  "/trimmed_sequences/{wildcards.sample}.html -j  results/" + date_folder +  "/trimmed_sequences/{wildcards.sample}.json --qualified_quality_phred {params.MINQ} --length_required {params.MINLEN}"
 
 #----------------------------------------------------------------------------------------------------------------------------
 
@@ -248,10 +271,26 @@ rule amr:
 		MINID = config["amr"]["minid"],
 		MINCOV = config["amr"]["mincov"],
 		DATABASE = config["amr"]["database"],
-	conda: "Pipeline/workflow/envs/amr.yml"
+	conda: "Pipeline/workflow/envs/abricate.yml"
 	threads: int(config["global"]["threads"]),
 	shell:
 		"abricate {input.ASSEMBLY} --threads {threads}  --minid {params.MINID} --mincov {params.MINCOV} > {output.OUT}"
+
+#----------------------------------------------------------------------------------------------------------------------------
+
+rule virulence:
+	input: 
+		ASSEMBLY = path_abs + "results/" + date_folder + "/assemblies_contigs/{sample}.fasta",
+	output:
+		OUT = path_abs + "results/" + date_folder + "/virulence/{sample}.tsv",
+	params:
+		DATABASE = config["virulence"]["database"],
+		MINID = config["virulence"]["minid"],
+		MINCOV = config["virulence"]["mincov"],	
+	conda: "Pipeline/workflow/envs/abricate.yml",
+	threads: int(config["global"]["threads"]),
+	shell:
+		"abricate {input.ASSEMBLY} --threads {threads} --minid {params.MINID} --mincov {params.MINCOV} --db {params.DATABASE} > {output.OUT}"	
 
 #----------------------------------------------------------------------------------------------------------------------------
 

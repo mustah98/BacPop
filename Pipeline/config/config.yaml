@@ -18,12 +18,19 @@ global:
  qc: True
  annotation: False
  amr: False
+ virulence: False
  mlst: False
  kraken: False
 
 ########################
 #### Tool Parameter ####
 ########################
+
+fastp:
+  threads: "32"
+  memory: "200"
+  length_required: "100"
+  qualified_quality_phred: "30"
 
 annotation:
  db: "../Pipeline/databases/bakta/"
@@ -37,6 +44,11 @@ amr:
  minid: "80"
  mincov: "80"
  database: "megares"
+
+virulence:
+  minid: "80"
+  mincov: "80"
+  database: "vfdb"
 
  roary:
   minid: "95"
