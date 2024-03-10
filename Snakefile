@@ -8,7 +8,7 @@ from datetime import datetime
 
 # Set config file and input and absolut path
 path_abs = os.path.abspath(os.getcwd()) + "/"
-configfile: "config/config.yaml"
+configfile: "Pipeline/config/config.yaml"
 input_path = config["data"]
 
 
@@ -130,7 +130,7 @@ rule qc:
 	output:
 		OUT1 = path_abs + "results/" + date_folder + "/QC/{sample}_trimm_1_fastqc.html",
 		OUT2 = path_abs + "results/" + date_folder + "/QC/{sample}_trimm_2_fastqc.html",
-	conda: "workflow/envs/qc.yml"
+	conda: "Pipeline/workflow/envs/qc.yml"
 	threads: int(config["global"]["threads"]),
 	shell:
 		"fastqc {input.R1} {input.R2} -o results/" + date_folder +  "/QC/"
@@ -146,7 +146,7 @@ rule trimm:
 		R2 = path_abs + "results/" + date_folder + "/trimmed_sequences/{sample}_trimm_2.fastq.gz",
 		HTML = path_abs + "results/" + date_folder + "/trimmed_sequences/{sample}.html",
 		JSON = path_abs + "results/" + date_folder + "/trimmed_sequences/{sample}.json",
-	conda: "workflow/envs/trimm.yml"
+	conda: "Pipeline/workflow/envs/trimm.yml"
 	threads: int(config["global"]["threads"]),
 	shell:
 		"fastp -w {threads} -i {input.R1} -I {input.R2} -o {output.R1} -O {output.R2}  -h results/" + date_folder +  "/trimmed_sequences/{wildcards.sample}.html -j  results/" + date_folder +  "/trimmed_sequences/{wildcards.sample}.json --qualified_quality_phred 20 --length_required 50"
@@ -162,7 +162,7 @@ rule assembly:
 	params:
 		MEMORY  = config["global"]["memory"],
 		PATH = path_abs + "results/" + date_folder + "assemblies/"
-	conda: "workflow/envs/assembly.yml"
+	conda: "Pipeline/workflow/envs/assembly.yml"
 	threads: int(config["global"]["threads"]),
 	shell:
 		"spades.py -t {threads} -m {params.MEMORY} --isolate -1 {input.R1} -2 {input.R2} -o {output.OUT}"
@@ -188,7 +188,7 @@ rule annotation:
 		DB = config["annotation"]["db"],
 		GENUS = config["annotation"]["genus"],
 		SPECIES = config["annotation"]["species"],
-	conda: "workflow/envs/annotation.yml"
+	conda: "Pipeline/workflow/envs/annotation.yml"
 	threads: int(config["global"]["threads"]),
 	shell:
 		"bakta {input.ASSEMBLY} --db {params.DB} -o {output.OUT} --threads {threads} --genus {params.GENUS} --species {params.SPECIES}"
@@ -214,7 +214,7 @@ rule mlst:
 		SED = path_abs + "results/" + date_folder + "/assemblies_contigs/",
 		PATH = path_abs + "results/" + date_folder + "/mlst/",
 	threads: int(config["global"]["threads"]),
-	conda: "workflow/envs/mlst.yml"
+	conda: "Pipeline/workflow/envs/mlst.yml"
 	shell:
 		"""
 			mlst  {input.ASSEMBLY} --nopath --csv --minid 90 --mincov 90 --threads {threads} > {output.OUT}
@@ -228,7 +228,7 @@ rule roary:
 		ANNOTATIONS = expand(path_abs + "results/" + date_folder + "/all_gffs/{sample}.gff3", sample = sample_names)
 	output:
 		OUT = directory(path_abs + "results/" + date_folder + "/roary/"),
-	conda: "workflow/envs/roary.yml",
+	conda: "Pipeline/workflow/envs/roary.yml",
 	params:
 		ANNOTATIONS_DIR = path_abs + "results/" + date_folder + "/all_gffs/",
 	shell:
@@ -246,7 +246,7 @@ rule amr:
 		MINID = config["amr"]["minid"],
 		MINCOV = config["amr"]["mincov"],
 		DATABASE = config["amr"]["database"],
-	conda: "workflow/envs/amr.yml"
+	conda: "Pipeline/workflow/envs/amr.yml"
 	threads: int(config["global"]["threads"]),
 	shell:
 		"abricate {input.ASSEMBLY} --threads {threads}  --minid {params.MINID} --mincov {params.MINCOV} > {output.OUT}"
@@ -262,7 +262,7 @@ rule cgMLST:
 		THRESHOLD = config["cgmlst"]["threshold"],
 		ASSEMBLYS = path_abs + "results/" + date_folder + "/assemblies_contigs/",
 	threads: int(config["global"]["threads"]),
-	conda: "workflow/envs/cgmlst.yml"
+	conda: "Pipeline/workflow/envs/cgmlst.yml"
 	shell:
 		"""
 			if [ -d "{output.CGMLST}" ]; then
@@ -282,10 +282,10 @@ rule cg_alignment:
 		CGMLST = path_abs + "results/" + date_folder + "/cgMLST/",
 	output:
 		MSA = directory(path_abs + "results/" + date_folder + "/cgMSA/"),
-	conda: "workflow/envs/cgmlst.yml",
+	conda: "Pipeline/workflow/envs/cgmlst.yml",
 	threads: int(config["global"]["threads"]),
 	shell:
-		"python3 workflow/scripts/cgMSA.py -i {input.CGMLST}/ -o {output.MSA} -t {threads}"
+		"python3 Pipeline/workflow/scripts/cgMSA.py -i {input.CGMLST}/ -o {output.MSA} -t {threads}"
 
 #----------------------------------------------------------------------------------------------------------------------------
 
@@ -296,7 +296,7 @@ rule tree:
 		TREE = directory(path_abs + "results/" + date_folder + "/phylogenetic_tree/")
 	params:
 		MODEL = config["tree"]["model"],
-	conda: "workflow/envs/cgmlst.yml",
+	conda: "Pipeline/workflow/envs/cgmlst.yml",
 	threads: int(config["global"]["threads"]),
 	shell:
 		"""
